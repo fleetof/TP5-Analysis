@@ -77,7 +77,7 @@ class Loader
     // 注册自动加载机制
     public static function register($autoload = '')
     {
-        // 注册系统自动加载
+        // 注册系统自动加载(原来是从这里“跳到”autoload的，先注册的)
         spl_autoload_register($autoload ?: 'think\\Loader::autoload', true, true);
 
         $rootPath = self::getRootPath();
@@ -116,18 +116,21 @@ class Loader
 
         // 自动加载extend目录
         self::addAutoLoadDir($rootPath . 'extend');
+        // 自动加载extend_test目录
+        self::addAutoLoadDir($rootPath . 'extend_test');
     }
 
     // 自动加载
     public static function autoload($class)
     {
+        //类的别名的转换，关键方法class_alias()
         if (isset(self::$classAlias[$class])) {
             return class_alias(self::$classAlias[$class], $class);
         }
-
+       
         if ($file = self::findFile($class)) {
 
-            // Win环境严格区分大小写
+            // Win环境严格区分大小写（代码写的真好 所谓完整性吧 WIN下严格区分啊
             if (strpos(PHP_OS, 'WIN') !== false && pathinfo($file, PATHINFO_FILENAME) != pathinfo(realpath($file), PATHINFO_FILENAME)) {
                 return false;
             }
@@ -153,7 +156,7 @@ class Loader
         // 查找 PSR-4
         $logicalPathPsr4 = strtr($class, '\\', DIRECTORY_SEPARATOR) . '.php';
 
-        $first = $class[0];
+        $first = $class[0]; //获取首字母
         if (isset(self::$prefixLengthsPsr4[$first])) {
             foreach (self::$prefixLengthsPsr4[$first] as $prefix => $length) {
                 if (0 === strpos($class, $prefix)) {
@@ -166,14 +169,14 @@ class Loader
             }
         }
 
-        // 查找 PSR-4 fallback dirs
+        // 查找 PSR-4 fallback dirs（上面没有找到的话就继续 这里是遍历extend目录
         foreach (self::$fallbackDirsPsr4 as $dir) {
             if (is_file($file = $dir . DIRECTORY_SEPARATOR . $logicalPathPsr4)) {
                 return $file;
             }
         }
 
-        // 查找 PSR-0
+        // 查找 PSR-0（就是因为psr-0的规范是扩展名用“_”分割
         if (false !== $pos = strrpos($class, '\\')) {
             // namespaced class name
             $logicalPathPsr0 = substr($logicalPathPsr4, 0, $pos + 1)
@@ -183,6 +186,7 @@ class Loader
             $logicalPathPsr0 = strtr($class, '_', DIRECTORY_SEPARATOR) . '.php';
         }
 
+        //跟上面的PSR-4是一样的 都是在寻找目录与上面构造好的文件连接
         if (isset(self::$prefixesPsr0[$first])) {
             foreach (self::$prefixesPsr0[$first] as $prefix => $dirs) {
                 if (0 === strpos($class, $prefix)) {
@@ -266,7 +270,7 @@ class Loader
         }
     }
 
-    // 添加Psr4空间
+    // 添加Psr4空间(注意该注释)
     private static function addPsr4($prefix, $paths, $prepend = false)
     {
         if (!$prefix) {
@@ -289,16 +293,17 @@ class Loader
                 throw new \InvalidArgumentException("A non-empty PSR-4 prefix must end with a namespace separator.");
             }
 
+            //这里的格式和从autoload_static引用过来的属性变得一样
             self::$prefixLengthsPsr4[$prefix[0]][$prefix] = $length;
             self::$prefixDirsPsr4[$prefix]                = (array) $paths;
         } elseif ($prepend) {
-            // Prepend directories for an already registered namespace.
+            // Prepend（队首） directories for an already registered namespace.
             self::$prefixDirsPsr4[$prefix] = array_merge(
                 (array) $paths,
                 self::$prefixDirsPsr4[$prefix]
             );
         } else {
-            // Append directories for an already registered namespace.
+            // Append（队尾） directories for an already registered namespace.
             self::$prefixDirsPsr4[$prefix] = array_merge(
                 self::$prefixDirsPsr4[$prefix],
                 (array) $paths

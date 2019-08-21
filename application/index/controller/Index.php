@@ -1,6 +1,8 @@
 <?php
 namespace app\index\controller;
 
+use ali\Pay;
+
 class Index
 {
     public function index()
@@ -11,5 +13,10 @@ class Index
     public function hello($name = 'ThinkPHP5')
     {
         return 'hello,' . $name;
+    }
+
+    public function test()
+    {
+        return Pay::index();
     }
 }
