@@ -101,8 +101,11 @@ class Config implements \ArrayAccess
             $type = pathinfo($config, PATHINFO_EXTENSION);
         }
 
+        // 工厂模式方法居然在自动加载类库中。
+        // 要明白这里为什么使用工厂模式————1.有利于代码维护，添加新文件不需要改代码了；2.取代了多个if…else…
         $object = Loader::factory($type, '\\think\\config\\driver\\', $config);
 
+        // 还是去调用set 赋值config
         return $this->set($object->parse(), $name);
     }
 
@@ -120,7 +123,7 @@ class Config implements \ArrayAccess
         } elseif (is_file($this->path . $file . $this->ext)) {
             $filename = $this->path . $file . $this->ext;
         }
-
+    
         if (isset($filename)) {
             return $this->loadFile($filename, $name);
         } elseif ($this->yaconf && Yaconf::has($file)) {
@@ -175,7 +178,7 @@ class Config implements \ArrayAccess
         } elseif ('yaml' == $type && function_exists('yaml_parse_file')) {
             return $this->set(yaml_parse_file($file), $name);
         }
-
+        // 当type非php或者非yaml的时候走这里 但是经过测试没往这里走
         return $this->parse($file, $type, $name);
     }
 
@@ -204,11 +207,12 @@ class Config implements \ArrayAccess
     {
         $name = strtolower($name);
 
+        // 切记修改yaconf需要重启服务（那么线上的话也要去重启吗 不会影响使用？
         if ($this->yaconf) {
-            $yaconfName = $this->getYaconfName($name);
+            $yaconfName = $this->getYaconfName($name); // 比如app.ini
 
             if (Yaconf::has($yaconfName)) {
-                $config = Yaconf::get($yaconfName);
+                $config = Yaconf::get($yaconfName); // 获取app.ini里的内容
                 return isset($this->config[$name]) ? array_merge($this->config[$name], $config) : $config;
             }
         }
@@ -225,6 +229,7 @@ class Config implements \ArrayAccess
      */
     public function get($name = null, $default = null)
     {
+        // 如果获取配置时不带前缀就加上默认前缀 （你这么写那么前面带个点会怎样
         if ($name && false === strpos($name, '.')) {
             $name = $this->prefix . '.' . $name;
         }
@@ -234,10 +239,12 @@ class Config implements \ArrayAccess
             return $this->config;
         }
 
+        // 最后一位是. 比如$name = app.
         if ('.' == substr($name, -1)) {
             return $this->pull(substr($name, 0, -1));
         }
 
+        // 获取yaconf的标准格式
         if ($this->yaconf) {
             $yaconfName = $this->getYaconfName($name);
 
@@ -288,14 +295,16 @@ class Config implements \ArrayAccess
         } elseif (is_array($name)) {
             // 批量设置
             if (!empty($value)) {
+                // 判断原来是不是已有相关配置了 有则合并
                 if (isset($this->config[$value])) {
                     $result = array_merge($this->config[$value], $name);
                 } else {
                     $result = $name;
                 }
-
+                // $this->config['app'] = $result; 还是给config类的属性赋值，整一个二维数组
                 $this->config[$value] = $result;
             } else {
+                // 如果没有前缀名（比如app） 直接放到属性了
                 $result = $this->config = array_merge($this->config, $name);
             }
         } else {

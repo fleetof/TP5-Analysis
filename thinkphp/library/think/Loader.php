@@ -398,6 +398,7 @@ class Loader
      */
     public static function factory($name, $namespace = '', ...$args)
     {
+        // 这句写得好
         $class = false !== strpos($name, '\\') ? $name : $namespace . ucwords($name);
 
         if (class_exists($class)) {

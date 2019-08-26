@@ -17,6 +17,7 @@ class Index
 
     public function test()
     {
+        halt(getenv());
         return Pay::index();
     }
 }

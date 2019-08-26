@@ -32,6 +32,7 @@ class Env
      */
     public function load($file)
     {
+        // 所以这个方法就决定了.env文件的格式是什么
         $env = parse_ini_file($file, true);
         $this->set($env);
     }
@@ -93,10 +94,12 @@ class Env
     public function set($env, $value = null)
     {
         if (is_array($env)) {
+            // 键值转换成大写
             $env = array_change_key_case($env, CASE_UPPER);
 
             foreach ($env as $key => $val) {
                 if (is_array($val)) {
+                    // 所以配置可以嵌套 但是要做处理即下划线连接
                     foreach ($val as $k => $v) {
                         $this->data[$key . '_' . strtoupper($k)] = $v;
                     }

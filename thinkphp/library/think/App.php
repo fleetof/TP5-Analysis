@@ -179,11 +179,13 @@ class App extends Container
 
         $this->instance('app', $this);
 
-        // 加载环境变量配置文件
+        // 加载环境变量配置文件 ———— 所以你可以自己去建立.env文件 至于格式是什么样？去看文件（自己手动建立的）
         if (is_file($this->rootPath . '.env')) {
+            // 去查看load是什么
             $this->env->load($this->rootPath . '.env');
         }
 
+        // 但是你在上面的.env把config_ext设置成其他格式之后，下面的load(Line325)就读取不到.php的配置文件了，那这个有什么其他作用呢？
         $this->configExt = $this->env->get('config_ext', '.php');
 
         // 加载惯例配置文件
@@ -319,7 +321,6 @@ class App extends Container
             }
 
             $files = isset($dir) ? scandir($dir) : [];
-
             foreach ($files as $file) {
                 if ('.' . pathinfo($file, PATHINFO_EXTENSION) === $this->configExt) {
                     $this->config->load($dir . $file, pathinfo($file, PATHINFO_FILENAME));
