@@ -273,7 +273,7 @@ class Container implements ArrayAccess, IteratorAggregate, Countable
 
         if (isset($this->bind[$abstract])) {
             $concrete = $this->bind[$abstract];
-
+            
             if ($concrete instanceof Closure) {
                 $object = $this->invokeFunction($concrete, $vars);
             } else {

@@ -2,6 +2,8 @@
 namespace app\index\controller;
 
 use ali\Pay;
+use Reflection;
+use Register;
 
 class Index
 {
@@ -19,5 +21,64 @@ class Index
     {
         halt(getenv());
         return Pay::index();
+    }
+
+    //单例模式测试
+    public function singleTest()
+    {
+        $abc = \Single::getInstance()->getAbc();
+        \Single::getInstance()->getAbc();
+        \Single::getInstance()->getAbc();
+        \Single::getInstance()->getAbc();
+        echo $abc;
+    }
+
+    //注册树测试
+    public function registerTreeTest()
+    {
+        Register::set('ali_pay', 'ali\Pay');
+        //Register::unregister('ali_pay');
+        //Register::get('ali_pay')::index();
+        Register::get('A')->getA();     //调用一个未注册的类
+    }
+
+    //依赖注入测试
+    public function dependencyInjectionTest()
+    {
+        $fruit = new \di\Apple();
+        return \di\People::eat($fruit);
+    }
+
+    //反射测试
+    public function reflectionTest()
+    {
+        $banana = new \di\Banana;
+        //var_dump($banana);
+        $reflecObj = new \ReflectionClass($banana);
+        //var_dump($reflecObj);
+        //输出整个反射类信息
+        //\ReflectionClass::export('\di\Banana');
+        $methods = $reflecObj->getMethods();
+        
+        foreach ($methods as $method) {
+            //如果要返回类的文档可以使用类直接调用该方法
+            var_dump($method->getDocComment());
+        }
+        //获取属性
+        var_dump($reflecObj->getProperties());
+    }
+
+    //测试Countable
+    public function countTest()
+    {
+        $countObj = new \Counta();
+        //echo $countObj->index();
+        echo count($countObj);
+    }
+
+    public function facadeTest()
+    {
+        $config = \Config::get('app.');
+        var_dump($config);
     }
 }

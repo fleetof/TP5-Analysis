@@ -114,20 +114,23 @@ class Loader
             self::addClassMap(__include_file($rootPath . 'runtime' . DIRECTORY_SEPARATOR . 'classmap.php'));
         }
 
-        // 自动加载extend目录
+        // 自动加载extend目录(给的属性是——fallbackDirsPsr4)
         self::addAutoLoadDir($rootPath . 'extend');
         // 自动加载extend_test目录
         self::addAutoLoadDir($rootPath . 'extend_test');
     }
 
-    // 自动加载
+    // 自动加载（返回bool值
     public static function autoload($class)
     {
-        //类的别名的转换，关键方法class_alias()
+        //类的别名的转换，关键方法class_alias()，这样调用别名类也就相当于调用真实类了（类库别名在base.php提前注册过了）
+        //所以这里是自动加载那些别名类
         if (isset(self::$classAlias[$class])) {
+            //返回bool值
             return class_alias(self::$classAlias[$class], $class);
         }
        
+        //这里是加载其他类 关键方法是findFile
         if ($file = self::findFile($class)) {
 
             // Win环境严格区分大小写（代码写的真好 所谓完整性吧 WIN下严格区分啊
